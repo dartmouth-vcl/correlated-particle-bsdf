@@ -37,6 +37,31 @@ BSDF<Float, Spectrum>::eval_pdf_sample(const BSDFContext &ctx,
         return { e_val, pdf_val, bs, bsdf_weight };
 }
 
+MI_VARIANT std::pair<typename BSDF<Float, Spectrum>::BSDFSample3f, Spectrum>
+BSDF<Float, Spectrum>::sample_more(const BSDFContext &ctx,
+           const SurfaceInteraction3f &si,
+           Float sample1,
+           const Point2f &sample2,
+           Float sample11,
+           const Point2f &sample22,
+           Mask active) const {
+            return sample(ctx, si, sample1, sample2, active);
+}
+
+MI_VARIANT std::tuple<Spectrum, Float, typename BSDF<Float, Spectrum>::BSDFSample3f, Spectrum>
+BSDF<Float, Spectrum>::eval_pdf_sample2(const BSDFContext &ctx,
+                                       const SurfaceInteraction3f &si,
+                                       const Vector3f &wo,
+                                       Float sample1,
+                                       const Point2f &sample2,
+                                       Float sample11,
+                                       const Point2f &sample22,
+                                       Mask active) const {
+        auto [e_val, pdf_val] = eval_pdf(ctx, si, wo, active);
+        auto [bs, bsdf_weight] = sample_more(ctx, si, sample1, sample2, sample11, sample22, active);
+        return { e_val, pdf_val, bs, bsdf_weight };
+}
+
 MI_VARIANT Spectrum BSDF<Float, Spectrum>::eval_null_transmission(
     const SurfaceInteraction3f & /* si */, Mask /* active */) const {
     return 0.f;
@@ -104,7 +129,16 @@ BSDF<Float, Spectrum>::eval_attribute(const std::string &name,
 
     return cb.result;
 }
+// MI_VARIANT typename std::tuple<typename BSDF<Float, Spectrum>::Point2f, Float, typename BSDF<Float, Spectrum>::Vector3f>
+// BSDF<Float, Spectrum>::outgoing_dir(const SurfaceInteraction3f &si, 
+//                                         const Float sample_z, 
+//                                         const Float sample_xy, 
+//                                         Float d, 
+//                                         Float cos_theta_diff) const {
+    
 
+//     return {Point2f(sample_z,sample_xy), sample_z, Vector3f(0.0f)};
+// }
 MI_VARIANT Float
 BSDF<Float, Spectrum>::eval_attribute_1(const std::string& name,
                                         const SurfaceInteraction3f & si,

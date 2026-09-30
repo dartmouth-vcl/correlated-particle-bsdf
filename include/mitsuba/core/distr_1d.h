@@ -377,7 +377,7 @@ public:
 
         return dr::fmadd(w0, y0, w1 * y1);
     }
-
+    
     /// Evaluate the normalized probability mass function (PDF) at position \c x
     Value eval_pdf_normalized(Value x, Mask active) const {
         MI_MASK_ARGUMENT(active);
@@ -385,6 +385,7 @@ public:
         return eval_pdf(x, active) * m_normalization;
     }
 
+    
     /// Evaluate the unnormalized cumulative distribution function (CDF) at position \c p
     Value eval_cdf(Value x_, Mask active = true) const {
         MI_MASK_ARGUMENT(active);
@@ -402,13 +403,12 @@ public:
 
         return cdf;
     }
-
-    /// Evaluate the unnormalized cumulative distribution function (CDF) at position \c p
-    Value eval_cdf_normalized(Value x, Mask active = true) const {
+    Value eval_cdf_normalized(Value x_, Mask active = true) const {
         MI_MASK_ARGUMENT(active);
 
-        return eval_cdf(x, active) * m_normalization;
+        return eval_cdf(x_,active)*m_normalization;
     }
+    
 
     /**
      * \brief %Transform a uniformly distributed sample to the stored
@@ -451,6 +451,43 @@ public:
 
         return dr::fmadd(Value(index) + t, m_interval_size, m_range.x());
     }
+    // Value eval_pdf_normalized_interval(Value x,Value interval_1, Value interval_2,Mask active) const {
+    //     MI_MASK_ARGUMENT(active);
+    //     Value cdf_min = eval_cdf_normalized(interval_1, active);
+    //     Value cdf_max = eval_cdf_normalized(interval_2, active);
+    //     return eval_pdf(x, active) * m_normalization/ (cdf_max - cdf_min);
+    // }
+    // std::pair<Value, Value> sample_pdf_subinterval(Value sample, Value interval_1, Value interval_2, Mask active = true) const {
+    //     MI_MASK_ARGUMENT(active);
+    //     Value cdf_min = eval_cdf_normalized(interval_1, active);
+    //     Value cdf_max = eval_cdf_normalized(interval_2, active);
+    //     Value sub_sample = cdf_min + sample * (cdf_max - cdf_min);
+    //     sub_sample *= m_integral;  
+    //     Index index = dr::binary_search<Index>(
+    //         m_valid.x(), m_valid.y(),
+    //         [&](Index index) DRJIT_INLINE_LAMBDA {
+    //             Value value = dr::gather<Value>(m_cdf, index, active);
+    //             if constexpr (!dr::is_jit_v<Float>) {
+    //                 return value < sub_sample;
+    //             } else {
+    //                 return ((value < sub_sample) || (value == 0)) &&
+    //                     (value != m_integral);
+    //             }
+    //         }
+    //     );
+
+    //     Value y0 = dr::gather<Value>(m_pdf, index, active),
+    //         y1 = dr::gather<Value>(m_pdf, index + 1u, active),
+    //         c0 = dr::gather<Value>(m_cdf, index - 1u, active && index > 0);
+
+    //     sub_sample = (sub_sample - c0) * m_inv_interval_size;
+
+    //     Value t_linear = (y0 - dr::safe_sqrt(dr::fmadd(y0, y0, 2.f * sub_sample * (y1 - y0)))) * dr::rcp(y0 - y1);
+    //     Value t_const  = sub_sample * dr::rcp(y0);
+    //     Value t        = dr::select(y0 == y1, t_const, t_linear);
+
+    //     return {dr::fmadd(Value(index) + t, m_interval_size, m_range.x()), dr::fmadd(t, y1 - y0, y0) * m_normalization / (cdf_max - cdf_min)};
+    // }
 
     /**
      * \brief %Transform a uniformly distributed sample to the stored

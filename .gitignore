@@ -28,3 +28,16 @@ __pycache__
 /docs/src/quickstart
 /docs/src/generated
 /docs/resources
+
+# Original Mitsuba 3 README (kept locally, not published)
+/README_mitsuba.md
+
+# Rendered outputs and generated textures of the examples
+/experiments/output/
+
+# Not part of the wave-optics BSDF release: upstream Mitsuba docs/tutorials
+# and unfinished plugins (kept locally)
+/docs/
+/tutorials/
+/src/bsdfs/ blend_particle_dielectric.cpp
+/src/phase/structurefactor_lorentz_mie.cpp

@@ -37,7 +37,11 @@ public:
         using Return = std::pair<Point2f, Float>;
         NB_OVERRIDE(sample_position, sample, active);
     }
-
+    std::pair<Point2f, Float>
+    sample_position_column(const Point2f &sample, Mask active = true, Float col = 1.0) const override {
+        using Return = std::pair<Point2f, Float>;
+        NB_OVERRIDE(sample_position_column, sample, active, col);
+    }
     Float pdf_position(const Point2f &p, Mask active = true) const override {
         NB_OVERRIDE(pdf_position, p, active);
     }
@@ -102,6 +106,7 @@ MI_PY_EXPORT(Texture) {
         .def_method(Texture, resolution)
         .def_method(Texture, pdf_spectrum, "si"_a, "active"_a = true)
         .def_method(Texture, sample_position, "sample"_a, "active"_a = true)
+        .def_method(Texture, sample_position_column, "sample"_a, "active"_a = true, "col"_a = 1.0)
         .def_method(Texture, pdf_position, "p"_a, "active"_a = true)
         .def_method(Texture, spectral_resolution)
         .def_method(Texture, wavelength_range);

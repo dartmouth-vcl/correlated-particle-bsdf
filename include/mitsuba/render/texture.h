@@ -107,6 +107,9 @@ public:
     virtual std::pair<Point2f, Float> sample_position(const Point2f &sample,
                                                       Mask active = true) const;
 
+    virtual std::pair<Point2f, Float> sample_position_column(const Point2f &sample,
+                                                      Mask active = true, Float col = 0.0) const;
+    
     /// Returns the probability per unit area of \ref sample_position()
     virtual Float pdf_position(const Point2f &p, Mask active = true) const;
 

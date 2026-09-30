@@ -99,6 +99,8 @@ public:
                 m_components.push_back(m_nested_bsdf[i]->flags(j));
 
         m_flags = m_nested_bsdf[0]->flags() | m_nested_bsdf[1]->flags();
+        // Probability of sampling bsdf_1 (independent of the blend weight)
+        m_sample_weight = props.get<ScalarFloat>("newweight", 0.5f);
     }
 
     void traverse(TraversalCallback *callback) override {
@@ -129,22 +131,27 @@ public:
 
         BSDFSample3f bs = dr::zeros<BSDFSample3f>();
         Spectrum result(0.f);
-
-        Mask m0 = active && sample1 >  weight,
-             m1 = active && sample1 <= weight;
+        /* Choose the nested BSDF with probability `m_sample_weight` (0.5 by
+           default) instead of `weight`, so that a lobe with a tiny blend weight
+           (e.g. the particle lobe) is still sampled often enough. The returned
+           value is reweighted accordingly, so the estimator stays unbiased. */
+        Mask m0 = active && sample1 >  m_sample_weight,
+             m1 = active && sample1 <= m_sample_weight;
 
         if (dr::any_or<true>(m0)) {
             auto [bs0, result0] = m_nested_bsdf[0]->sample(
-                ctx, si, (sample1 - weight) / (1 - weight), sample2, m0);
+                ctx, si, (sample1 - m_sample_weight) / (1 - m_sample_weight), sample2, m0);
             dr::masked(bs, m0) = bs0;
-            dr::masked(result, m0) = result0;
+            dr::masked(result, m0) = result0 * (1 - weight) / (1 - m_sample_weight);
+            dr::masked(bs.pdf, m0) = bs.pdf * (1 - m_sample_weight);
         }
 
         if (dr::any_or<true>(m1)) {
             auto [bs1, result1] = m_nested_bsdf[1]->sample(
-                ctx, si, sample1 / weight, sample2, m1);
+                ctx, si, sample1 / m_sample_weight, sample2, m1);
             dr::masked(bs, m1) = bs1;
-            dr::masked(result, m1) = result1;
+            dr::masked(result, m1) = result1 * weight / m_sample_weight;
+            dr::masked(bs.pdf, m1) = bs.pdf * m_sample_weight;
         }
 
         return { bs, result };
@@ -181,9 +188,8 @@ public:
             return m_nested_bsdf[sample_first ? 0 : 1]->pdf(ctx2, si, wo, active);
         }
 
-        Float weight = eval_weight(si, active);
-        return m_nested_bsdf[0]->pdf(ctx, si, wo, active) * (1 - weight) +
-               m_nested_bsdf[1]->pdf(ctx, si, wo, active) * weight;
+        return m_nested_bsdf[0]->pdf(ctx, si, wo, active) * (1 - m_sample_weight) +
+               m_nested_bsdf[1]->pdf(ctx, si, wo, active) * m_sample_weight;
     }
 
     std::pair<Spectrum, Float> eval_pdf(const BSDFContext &ctx,
@@ -209,7 +215,7 @@ public:
         auto [val_1, pdf_1] = m_nested_bsdf[1]->eval_pdf(ctx, si, wo, active);
 
         return { val_0 * (1 - weight) + val_1 * weight,
-                 pdf_0 * (1 - weight) + pdf_1 * weight };
+                 pdf_0 * (1 - m_sample_weight) + pdf_1 * m_sample_weight };
     }
 
     MI_INLINE Float eval_weight(const SurfaceInteraction3f &si, const Mask &active) const {
@@ -237,6 +243,7 @@ public:
 protected:
     ref<Texture> m_weight;
     ref<Base> m_nested_bsdf[2];
+    ScalarFloat m_sample_weight;
 };
 
 MI_IMPLEMENT_CLASS_VARIANT(BlendBSDF, BSDF)

@@ -178,6 +178,50 @@ public:
 
         return { Point2u(col, row), (col_cdf_1 - col_cdf_0) * m_normalization, sample };
     }
+    std::tuple<Point2u, Float, Point2f> sample_conditional_column(const Point2f &sample_,
+                                               Mask active = true, Float normalized_row_value = 1.0) const {
+        MI_MASK_ARGUMENT(active);
+        Point2f sample(sample_);
+
+        // Avoid degeneracies on the domain boundary
+        sample = dr::clip(sample, dr::Smallest<Float>, dr::OneMinusEpsilon<Float>);
+
+        // Scale sample Y range
+        sample.y() *= m_inv_normalization;
+
+        // Sample the row from the marginal distribution
+        // UInt32 row = 
+        // // dr::binary_search<UInt32>(
+        //     0u, m_size.y() - 1, [&](UInt32 idx) DRJIT_INLINE_LAMBDA {
+        //         return dr::gather<Float>(m_marg_cdf, idx, active) < sample.y();
+        //     });
+
+        UInt32 row = (UInt32)(normalized_row_value * m_size.y());
+
+        UInt32 offset = row * m_size.x();
+
+        // Scale sample X range
+        sample.x() *= dr::gather<Float>(m_cond_cdf, offset + m_size.x() - 1, active);
+
+        // Sample the column from the conditional distribution
+        UInt32 col = dr::binary_search<UInt32>(
+            0u, m_size.x() - 1, [&](UInt32 idx) DRJIT_INLINE_LAMBDA {
+                return dr::gather<Float>(m_cond_cdf, idx + offset, active) < sample.x();
+            });
+
+        // Re-scale uniform variate
+        Float col_cdf_0 = dr::gather<Float>(m_cond_cdf, offset + col - 1, active && col > 0),
+              col_cdf_1 = dr::gather<Float>(m_cond_cdf, offset + col, active),
+              row_cdf_0 = dr::gather<Float>(m_marg_cdf, row - 1, active && row > 0),
+              row_cdf_1 = dr::gather<Float>(m_marg_cdf, row, active);
+
+        sample.x() -= col_cdf_0;
+        sample.y() -= row_cdf_0;
+        dr::masked(sample.x(), col_cdf_1 != col_cdf_0) /= col_cdf_1 - col_cdf_0;
+        dr::masked(sample.y(), row_cdf_1 != row_cdf_0) /= row_cdf_1 - row_cdf_0;
+        
+        return { Point2u(col, row), (col_cdf_1 - col_cdf_0) / (row_cdf_1 - row_cdf_0), sample };
+    }
 
     std::string to_string() const {
         std::ostringstream oss;

@@ -23,5 +23,7 @@ add_plugin(measured_polarized   measured_polarized.cpp)
 add_plugin(pplastic             pplastic.cpp)
 add_plugin(principled           principled.cpp)
 add_plugin(principledthin       principledthin.cpp)
-
+add_plugin(particle2d           particle2d.cpp)
+add_plugin(particle2d_IS_texture           particle2d_IS_texture.cpp)
+add_plugin(particle_importance_sampling           particle_importance_sampling.cpp)
 set(MI_PLUGIN_TARGETS "${MI_PLUGIN_TARGETS}" PARENT_SCOPE)

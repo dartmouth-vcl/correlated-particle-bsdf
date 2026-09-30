@@ -59,6 +59,12 @@ Texture<Float, Spectrum>::sample_position(const Point2f &sample,
 }
 
 MI_VARIANT
+std::pair<typename Texture<Float, Spectrum>::Point2f, Float>
+Texture<Float, Spectrum>::sample_position_column(const Point2f &sample,
+                                          Mask, Float col) const {
+    return { sample, 1.f };
+}
+MI_VARIANT
 Float Texture<Float, Spectrum>::pdf_position(const Point2f &, Mask) const {
     return 1;
 }

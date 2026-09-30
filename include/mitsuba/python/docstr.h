@@ -896,7 +896,7 @@ Parameter ``si``:
 
 Parameter ``wo``:
     The outgoing direction)doc";
-
+static const char *__doc_mitsuba_BSDF_eval_pdf_sample2 =R"doc(..)doc";
 static const char *__doc_mitsuba_BSDF_eval_pdf_sample =
 R"doc(Jointly evaluate the BSDF f(wi, wo), the probability per unit solid
 angle of sampling the given direction ``wo`` and importance sample the
@@ -1026,7 +1026,7 @@ other information. The contents are undefined if sampling failed.
 value: The BSDF value divided by the probability (multiplied by the
 cosine foreshortening factor when a non-delta component is sampled). A
 zero spectrum indicates that sampling failed.)doc";
-
+static const char *__doc_mitsuba_BSDF_sample_more = R"doc(test)doc";
 static const char *__doc_mitsuba_BSDF_set_id = R"doc(Set a string identifier)doc";
 
 static const char *__doc_mitsuba_BSDF_to_string = R"doc(Return a human-readable representation of the BSDF)doc";
@@ -9524,6 +9524,24 @@ discrete representation.
 The default implementation returns ``(1, 1)``)doc";
 
 static const char *__doc_mitsuba_Texture_sample_position =
+R"doc(Importance sample a surface position proportional to the overall
+spectral reflectance or intensity of the texture
+
+This function assumes that the texture is implemented as a mapping
+from 2D UV positions to texture values, which is not necessarily true
+for all textures (e.g. 3D noise functions, mesh attributes, etc.). For
+this reason, not every will plugin provide a specialized
+implementation, and the default implementation simply return the input
+sample (i.e. uniform sampling is used).
+
+Parameter ``sample``:
+    A 2D vector of uniform variates
+
+Returns:
+    1. A texture-space position in the range :math:`[0, 1]^2`
+
+2. The associated probability per unit area in UV space)doc";
+static const char *__doc_mitsuba_Texture_sample_position_column =
 R"doc(Importance sample a surface position proportional to the overall
 spectral reflectance or intensity of the texture
 

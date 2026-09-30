@@ -43,7 +43,12 @@ public:
            Mask active) const override {
         NB_OVERRIDE_PURE(sample, ctx, si, sample1, sample2, active);
     }
-
+    std::pair<BSDFSample3f, Spectrum>
+    sample_more(const BSDFContext &ctx, const SurfaceInteraction3f &si,
+           Float sample1, const Point2f &sample2,Float sample11, const Point2f &sample22,
+           Mask active) const override {
+        NB_OVERRIDE_PURE(sample_more, ctx, si, sample1, sample2, sample1, sample2, active);
+    }
     Spectrum eval(const BSDFContext &ctx,
                   const SurfaceInteraction3f &si,
                   const Vector3f &wo,
@@ -116,6 +121,12 @@ template <typename Ptr, typename Cls> void bind_bsdf_generic(Cls &cls) {
                 return bsdf->sample(ctx, si, sample1, sample2, active);
             }, "ctx"_a, "si"_a, "sample1"_a, "sample2"_a,
             "active"_a = true, D(BSDF, sample))
+        .def("sample_more",
+            [](Ptr bsdf, const BSDFContext &ctx, const SurfaceInteraction3f &si,
+               Float sample1, const Point2f &sample2,Float sample11, const Point2f &sample22, Mask active) {
+                return bsdf->sample_more(ctx, si, sample1, sample2,sample11, sample22, active);
+            }, "ctx"_a, "si"_a, "sample1"_a, "sample2"_a,"sample11"_a, "sample22"_a,
+            "active"_a = true, D(BSDF, sample_more))
         .def("eval",
              [](Ptr bsdf, const BSDFContext &ctx, const SurfaceInteraction3f &si,
                 const Vector3f &wo,
@@ -133,11 +144,18 @@ template <typename Ptr, typename Cls> void bind_bsdf_generic(Cls &cls) {
              }, "ctx"_a, "si"_a, "wo"_a, "active"_a = true, D(BSDF, eval_pdf))
         .def("eval_pdf_sample",
              [](Ptr bsdf, const BSDFContext &ctx, const SurfaceInteraction3f &si,
-                const Vector3f &wo, Float sample1, const Point2f &sample2,
+                const Vector3f &wo, Float sample1, const Point2f &sample2, 
                 Mask active) {
                     return bsdf->eval_pdf_sample(ctx, si, wo, sample1, sample2, active);
                 }, "ctx"_a, "si"_a, "wo"_a, "sample1"_a, "sample2"_a, "active"_a = true,
                 D(BSDF, eval_pdf))
+        .def("eval_pdf_sample2",
+             [](Ptr bsdf, const BSDFContext &ctx, const SurfaceInteraction3f &si,
+                const Vector3f &wo, Float sample1, const Point2f &sample2,Float sample11, const Point2f &sample22,
+                Mask active) {
+                    return bsdf->eval_pdf_sample2(ctx, si, wo, sample1, sample2, sample11, sample22,active);
+                }, "ctx"_a, "si"_a, "wo"_a, "sample1"_a, "sample2"_a ,"sample11"_a, "sample22"_a,"active"_a= true,
+                D(BSDF, eval_pdf_sample2))
         .def("eval_null_transmission",
              [](Ptr bsdf, const SurfaceInteraction3f &si, Mask active) {
                  return bsdf->eval_null_transmission(si, active);

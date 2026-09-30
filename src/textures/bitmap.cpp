@@ -612,6 +612,46 @@ public:
         return { sample2, pdf * dr::prod(res) };
     }
 
+    std::pair<Point2f, Float>
+    sample_position_column(const Point2f &sample, Mask active = true, Float col = 0.0) const override {
+        if (dr::none_or<false>(active))
+            return { dr::zeros<Point2f>(), dr::zeros<Float>() };
+
+        if (!m_distr2d)
+            init_distr();
+
+        auto [pos, pdf, sample2] = m_distr2d->sample_conditional_column(sample, active, col);
+        // auto [pos, pdf, sample2] = m_distr2d->sample(sample, active);
+        ScalarVector2i res = resolution();
+        ScalarVector2f inv_resolution = dr::rcp(ScalarVector2f(res));
+
+        if (m_texture.filter_mode() == dr::FilterMode::Nearest) {
+            sample2 = (Point2f(pos) + sample2) * inv_resolution;
+        } else {
+            sample2 = (Point2f(pos) + 0.5f + warp::square_to_tent(sample2)) *
+                      inv_resolution;
+
+            switch (m_texture.wrap_mode()) {
+                case dr::WrapMode::Repeat:
+                    sample2[sample2 < 0.f] += 1.f;
+                    sample2[sample2 > 1.f] -= 1.f;
+                    break;
+
+                /* Texel sampling is restricted to [0, 1] and only interpolation
+                   with one row/column of pixels beyond that is considered, so
+                   both clamp/mirror effectively use the same strategy. No such
+                   distinction is needed for the pdf() method. */
+                case dr::WrapMode::Clamp:
+                case dr::WrapMode::Mirror:
+                    sample2[sample2 < 0.f] = -sample2;
+                    sample2[sample2 > 1.f] = 2.f - sample2;
+                    break;
+            }
+        }
+
+        return { sample2, pdf * dr::prod(res) };
+    }
+
     Float pdf_position(const Point2f &pos_, Mask active = true) const override {
         if (dr::none_or<false>(active))
             return dr::zeros<Float>();

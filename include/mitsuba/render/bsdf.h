@@ -319,7 +319,18 @@ public:
            const SurfaceInteraction3f &si,
            Float sample1,
            const Point2f &sample2,
-           Mask active = true) const = 0;
+           Mask active = true
+           ) const = 0;
+
+    virtual std::pair<BSDFSample3f, Spectrum>
+    sample_more(const BSDFContext &ctx,
+           const SurfaceInteraction3f &si,
+           Float sample1,
+           const Point2f &sample2,
+           Float sample11,
+           const Point2f &sample22,
+           Mask active = true) const;
+
 
     /**
      * \brief Evaluate the BSDF f(wi, wo) or its adjoint version f^{*}(wi, wo)
@@ -459,6 +470,16 @@ public:
                     const Point2f &sample2,
                     Mask active = true) const;
 
+    virtual std::tuple<Spectrum, Float, BSDFSample3f, Spectrum>
+    eval_pdf_sample2(const BSDFContext &ctx,
+                    const SurfaceInteraction3f &si,
+                    const Vector3f &wo,
+                    Float sample1,
+                    const Point2f &sample2,
+                    Float sample11,
+                    const Point2f &sample22,
+                    Mask active = true) const;
+
 
     /**
      * \brief Evaluate un-scattered transmission component of the BSDF
@@ -499,6 +520,13 @@ public:
      * \return
      *     An unpolarized spectral power distribution or reflectance value
      */
+
+    // virtual std::tuple<Point2f, Float, Vector3f> outgoing_dir(const SurfaceInteraction3f &si, 
+    //                                                         const Float sample_z, 
+    //                                                         const Float sample_xy, 
+    //                                                         Float d, 
+    //                                                         Float cos_theta_diff) const;
+        
     virtual UnpolarizedSpectrum eval_attribute(const std::string &name,
                                                const SurfaceInteraction3f &si,
                                                Mask active = true) const;
@@ -656,11 +684,14 @@ NAMESPACE_END(mitsuba)
 
 DRJIT_CALL_TEMPLATE_BEGIN(mitsuba::BSDF)
     DRJIT_CALL_METHOD(sample)
+    DRJIT_CALL_METHOD(sample_more)
+    // DRJIT_CALL_METHOD(outgoing_dir)
     DRJIT_CALL_METHOD(eval)
     DRJIT_CALL_METHOD(eval_null_transmission)
     DRJIT_CALL_METHOD(pdf)
     DRJIT_CALL_METHOD(eval_pdf)
     DRJIT_CALL_METHOD(eval_pdf_sample)
+    DRJIT_CALL_METHOD(eval_pdf_sample2)
     DRJIT_CALL_METHOD(eval_diffuse_reflectance)
     DRJIT_CALL_METHOD(has_attribute)
     DRJIT_CALL_METHOD(eval_attribute)

@@ -92,6 +92,10 @@ MI_PY_EXPORT(ContinuousDistribution) {
                  "x"_a, "active"_a = true, D(ContinuousDistribution, eval_cdf))
             .def("eval_cdf_normalized", &ContinuousDistribution::eval_cdf_normalized,
                  "x"_a, "active"_a = true, D(ContinuousDistribution, eval_cdf_normalized))
+          // .def("eval_pdf_normalized_interval", &ContinuousDistribution::eval_pdf_normalized_interval,
+          //        "x"_a, "interval_1"_a,"interval_2"_a,"active"_a = true, D(ContinuousDistribution, eval_pdf_normalized_interval))
+          //        .def("sample_pdf_subinterval", &ContinuousDistribution::sample_pdf_subinterval,
+          //        "x"_a,"interval_1"_a,"interval_2"_a, "active"_a = true, D(ContinuousDistribution, sample_pdf_subinterval))
             .def_method(ContinuousDistribution, update)
             .def_method(ContinuousDistribution, integral)
             .def_method(ContinuousDistribution, normalization)
@@ -146,6 +150,7 @@ MI_PY_EXPORT(IrregularContinuousDistribution) {
                  "x"_a, "active"_a = true, D(IrregularContinuousDistribution, eval_cdf))
             .def("eval_cdf_normalized", &IrregularContinuousDistribution::eval_cdf_normalized,
                  "x"_a, "active"_a = true, D(IrregularContinuousDistribution, eval_cdf_normalized))
+
             .def_method(IrregularContinuousDistribution, update)
             .def_method(IrregularContinuousDistribution, integral)
             .def_method(IrregularContinuousDistribution, normalization)
